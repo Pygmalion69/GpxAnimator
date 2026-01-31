@@ -18,6 +18,7 @@ class GPXAnimator(QMainWindow):
         self.resize(1000, 800)
 
         self.tracks = [] 
+        self.total_steps = 1000
 
         self.init_ui()
 
@@ -82,7 +83,7 @@ class GPXAnimator(QMainWindow):
                 var polylines = [];
                 var animationFrame;
                 var currentStep = 0;
-                var totalSteps = 1000; 
+                var totalSteps = {self.total_steps}; 
 
                 function initAnimation() {{
                     // Clear existing polylines
@@ -146,11 +147,17 @@ class GPXAnimator(QMainWindow):
                     gpx = gpxpy.parse(gpx_file)
                     
                 self.tracks = []
+                total_distance = 0
                 for track in gpx.tracks:
+                    total_distance += track.length_2d()
                     for segment in track.segments:
                         points = [(p.latitude, p.longitude) for p in segment.points]
                         if points:
                             self.tracks.append(points)
+                
+                # 1000 steps per 10km (10000m)
+                # Ensure a minimum of 100 steps for very short tracks
+                self.total_steps = max(100, int((total_distance / 10000) * 1000))
                 
                 if self.tracks:
                     self.load_map(self.tracks)
@@ -201,7 +208,7 @@ class GPXAnimator(QMainWindow):
         # Initialize animation in JS
         self.web_view.page().runJavaScript("window.initGpxAnimation();")
         
-        total_steps = 1000 
+        total_steps = self.total_steps 
         temp_dir = tempfile.mkdtemp()
         try:
             for i in range(total_steps + 1):
