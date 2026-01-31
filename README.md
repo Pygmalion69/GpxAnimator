@@ -19,3 +19,7 @@ Run the application using:
 ```bash
 python main.py
 ```
+
+### Sample
+
+https://github.com/user-attachments/assets/3958631c-9b01-4edf-b342-266f00c53466
