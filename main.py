@@ -150,30 +150,33 @@ class GPXAnimator(QMainWindow):
     def open_gpx(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open GPX File", "", "GPX Files (*.gpx)")
         if file_path:
-            try:
-                with open(file_path, 'r') as gpx_file:
-                    gpx = gpxpy.parse(gpx_file)
-                    
-                self.tracks = []
-                total_distance = 0
-                for track in gpx.tracks:
-                    total_distance += track.length_2d()
-                    for segment in track.segments:
-                        points = [(p.latitude, p.longitude) for p in segment.points]
-                        if points:
-                            self.tracks.append(points)
+            self.load_gpx(file_path)
+
+    def load_gpx(self, file_path):
+        try:
+            with open(file_path, 'r') as gpx_file:
+                gpx = gpxpy.parse(gpx_file)
                 
-                # 1000 steps per 10km (10000m)
-                # Ensure a minimum of 100 steps for very short tracks
-                self.total_steps = max(100, int((total_distance / 10000) * 1000))
-                
-                if self.tracks:
-                    self.load_map(self.tracks)
-                    self.play_btn.setEnabled(True)
-                    self.stop_btn.setEnabled(False)
-                    self.export_btn.setEnabled(True)
-            except Exception as e:
-                print(f"Error loading GPX: {e}")
+            self.tracks = []
+            total_distance = 0
+            for track in gpx.tracks:
+                total_distance += track.length_2d()
+                for segment in track.segments:
+                    points = [(p.latitude, p.longitude) for p in segment.points]
+                    if points:
+                        self.tracks.append(points)
+            
+            # 1000 steps per 10km (10000m)
+            # Ensure a minimum of 100 steps for very short tracks
+            self.total_steps = max(100, int((total_distance / 10000) * 1000))
+            
+            if self.tracks:
+                self.load_map(self.tracks)
+                self.play_btn.setEnabled(True)
+                self.stop_btn.setEnabled(False)
+                self.export_btn.setEnabled(True)
+        except Exception as e:
+            print(f"Error loading GPX: {e}")
 
     def play_animation(self):
         self.web_view.loadFinished.connect(self._start_js_animation)
@@ -278,4 +281,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GPXAnimator()
     window.show()
+    if len(sys.argv) > 1:
+        window.load_gpx(sys.argv[1])
     sys.exit(app.exec())
