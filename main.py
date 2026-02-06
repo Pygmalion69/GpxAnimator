@@ -1,11 +1,19 @@
 import sys
 import os
+import warnings
 import gpxpy
 import folium
 import json
 import tempfile
 import shutil
 import subprocess
+# Suppress sip deprecation warning until PyQt6/sip is updated in the environment.
+warnings.filterwarnings(
+    "ignore",
+    message=r"sipPyTypeDict\(\) is deprecated.*",
+    category=DeprecationWarning,
+)
+
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
                              QWidget, QPushButton, QFileDialog)
 from PyQt6.QtWebEngineWidgets import QWebEngineView
