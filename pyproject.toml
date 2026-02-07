@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpx-animator"
+version = "0.1.0"
+description = "A desktop application to animate GPX tracks on an interactive map and export MP4 videos."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "Apache 2.0" }
+dependencies = [
+  "branca",
+  "folium",
+  "gpxpy",
+  "Jinja2",
+  "numpy",
+  "PyQt6",
+  "PyQt6-WebEngine",
+  "requests",
+  "xyzservices",
+]
+
+[project.optional-dependencies]
+build = ["pyinstaller"]
+
+[tool.setuptools]
+py-modules = ["main"]
