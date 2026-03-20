@@ -17,7 +17,31 @@ warnings.filterwarnings(
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
                              QWidget, QPushButton, QFileDialog)
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtCore import QEventLoop, QTimer
+from PyQt6.QtWebEngineCore import QWebEngineUrlRequestInterceptor
+from PyQt6.QtCore import QEventLoop, QTimer, QUrl
+
+
+APP_BASE_URL = os.environ.get("GPX_ANIMATOR_BASE_URL", "https://gpx-animator.local/")
+APP_REFERER = os.environ.get("GPX_ANIMATOR_REFERER", APP_BASE_URL)
+APP_USER_AGENT = os.environ.get(
+    "GPX_ANIMATOR_USER_AGENT",
+    "GpxAnimator/0.1 (+https://gpx-animator.local/)",
+)
+TILE_HOSTS = {
+    "tile.openstreetmap.org",
+    "a.tile.openstreetmap.org",
+    "b.tile.openstreetmap.org",
+    "c.tile.openstreetmap.org",
+}
+
+
+class MapRequestInterceptor(QWebEngineUrlRequestInterceptor):
+    def interceptRequest(self, info):
+        host = info.requestUrl().host().lower()
+        if host in TILE_HOSTS:
+            info.setHttpHeader(b"Referer", APP_REFERER.encode("utf-8"))
+            info.setHttpHeader(b"User-Agent", APP_USER_AGENT.encode("utf-8"))
+
 
 class GPXAnimator(QMainWindow):
     def __init__(self):
@@ -60,6 +84,10 @@ class GPXAnimator(QMainWindow):
 
         # Web view for Folium map
         self.web_view = QWebEngineView()
+        profile = self.web_view.page().profile()
+        self.request_interceptor = MapRequestInterceptor()
+        profile.setUrlRequestInterceptor(self.request_interceptor)
+        profile.setHttpUserAgent(APP_USER_AGENT)
         layout.addWidget(self.web_view)
 
         # Initial empty map
@@ -145,7 +173,7 @@ class GPXAnimator(QMainWindow):
                 """
                 m.get_root().script.add_child(folium.Element(script))
 
-        self.web_view.setHtml(m.get_root().render())
+        self.web_view.setHtml(m.get_root().render(), QUrl(APP_BASE_URL))
 
     def open_gpx(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open GPX File", "", "GPX Files (*.gpx)")
